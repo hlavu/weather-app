@@ -20,7 +20,7 @@ import android.widget.Toast;
 import java.time.LocalTime;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements IBindData {
 
     ImageButton search;
     EditText city;
@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     TextView sunSet;
     ImageButton list;
     ArrayList<String> cityList = new ArrayList<>();
-    WeatherData currCityData;
+    IBindData iBindData;
     // uses this value to set back ground based on the current time
     LocalTime myTime;
 
@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        iBindData = this;
         // sets views
         city = (EditText) findViewById(R.id.searchLocation);
         search = (ImageButton) findViewById(R.id.searchButton);
@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
         sunSet = (TextView) findViewById(R.id.dusk);
 
         // gets current time
-        myTime =  LocalTime.now();
+        myTime = LocalTime.now();
         setBackground(myTime.getHour(), background);
 
         search.setOnClickListener(view -> {
@@ -72,19 +72,19 @@ public class MainActivity extends AppCompatActivity {
             hideSoftKeyboard(MainActivity.this);
 
             // if user did not provide a city name, show toast to announce
-            if(city.getText().toString().equals("")){
+            if (city.getText().toString().equals("")) {
                 Toast.makeText(getApplicationContext(), "Please provide a city name!!!", Toast.LENGTH_SHORT).show();
             } else {
                 // calls function requesting API
-                currCityData = new WeatherData();
-                currCityData.getData(city.getText().toString(), this.getApplicationContext(), MainActivity.this, null,true, false);
+                AppController controller = new AppController(iBindData);
+                controller.getData(this, city.getText().toString());
                 city.setText(""); // resets value of edit text
             }
 
         });
 
         list.setOnClickListener(view -> {
-            Intent myIntent = new Intent(this, HistoryList.class);
+            Intent myIntent = new Intent(this, HistoryListActivity.class);
             myIntent.putStringArrayListExtra("cities", this.cityList);
             startActivity(myIntent);
         });
@@ -93,38 +93,40 @@ public class MainActivity extends AppCompatActivity {
 
     @SuppressLint("SetTextI18n")
     public void setData(WeatherData cityData) {
-        if(cityData.err.isEmpty()){
-        // sets content for xml views
-        setBackground(Integer.parseInt(cityData.timeStr.substring(0,2)), background);
-        currentDate.setText(cityData.dateStr);
-        currentTime.setText(cityData.timeStr);
-        temperature.setText(cityData.tempC + "°");
-        location.setText(cityData.city.toUpperCase());
-        displayWeather.setText(cityData.weather);
-        feels.setText("Feels like: " + cityData.feelTemp + "°C");
-        humid.setText(cityData.humidity + "%");
-        wind.setText(cityData.windSpeed + "m/s");
-        sunRise.setText(cityData.sunRiseStr);
-        sunSet.setText(cityData.sunSetStr);
-        // add city to CityList
-        this.cityList.add(cityData.city.toLowerCase());
-        }  else {
+        if (cityData.err.isEmpty()) {
+            // sets content for xml views
+            setBackground(Integer.parseInt(cityData.timeStr.substring(0, 2)), background);
+            currentDate.setText(cityData.dateStr);
+            currentTime.setText(cityData.timeStr);
+            temperature.setText(cityData.tempC + "°");
+            location.setText(cityData.city.toUpperCase());
+            displayWeather.setText(cityData.weather);
+            feels.setText("Feels like: " + cityData.feelTemp + "°C");
+            humid.setText(cityData.humidity + "%");
+            wind.setText(cityData.windSpeed + "m/s");
+            sunRise.setText(cityData.sunRiseStr);
+            sunSet.setText(cityData.sunSetStr);
+            // add city to CityList
+            if (!this.cityList.contains(cityData.city.toLowerCase())) {
+                this.cityList.add(cityData.city.toLowerCase());
+            }
+        } else {
             Toast.makeText(getApplicationContext(), "Invalid city!!!", Toast.LENGTH_SHORT).show();
         }
     }
 
     // gets time and changes img src based on time
     @SuppressLint("UseCompatLoadingForDrawables")
-    void setBackground(int hour, ImageView imgV){
+    void setBackground(int hour, ImageView imgV) {
         Drawable src = getDrawable(R.drawable.night_);
         displayWeather.setTextColor(Color.parseColor("#ffffff"));
 
-        if(hour >= 4 && hour < 7 ) {
+        if (hour >= 4 && hour < 7) {
             src = getDrawable(R.drawable.dawn_);
             displayWeather.setTextColor(Color.parseColor("#000000"));
-        } else if(hour >=7 && hour < 16){
+        } else if (hour >= 7 && hour < 16) {
             src = getDrawable(R.drawable.day_);
-        } else if(hour >= 16 && hour < 19 ){
+        } else if (hour >= 16 && hour < 19) {
             src = getDrawable(R.drawable.dusk_);
             displayWeather.setTextColor(Color.parseColor("#000000"));
         }
@@ -136,12 +138,17 @@ public class MainActivity extends AppCompatActivity {
         InputMethodManager inputMethodManager =
                 (InputMethodManager) activity.getSystemService(
                         Activity.INPUT_METHOD_SERVICE);
-        if(inputMethodManager.isAcceptingText()){
+        if (inputMethodManager.isAcceptingText()) {
             inputMethodManager.hideSoftInputFromWindow(
-            activity.getCurrentFocus().getWindowToken(),
+                    activity.getCurrentFocus().getWindowToken(),
                     0
             );
         }
+    }
+
+    @Override
+    public void bindData(WeatherData weatherData) {
+        setData(weatherData);
     }
 }
 
