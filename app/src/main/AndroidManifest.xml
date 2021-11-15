@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.WeatherApp">
         <activity
-            android:name=".HistoryList"
+            android:name=".HistoryListActivity"
             android:exported="true" />
         <activity
             android:name=".MainActivity"

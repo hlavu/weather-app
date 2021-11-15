@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.RequiresApi;
@@ -14,18 +15,16 @@ import androidx.annotation.RequiresApi;
 import java.util.ArrayList;
 
 public class CityAdapter extends BaseAdapter {
-    ArrayList<String> cities;
+    ArrayList<WeatherData> weatherDataList;
     Context context;
-    View myView;
-    ArrayList<WeatherData> dataList = new ArrayList<WeatherData>();
 
-    public CityAdapter(Context context, ArrayList<String> cities){
+    public CityAdapter(Context context, ArrayList<WeatherData> weatherDataList){
         this.context = context;
-        this.cities = cities;
+        this.weatherDataList = weatherDataList;
     }
     @Override
     public int getCount() {
-        return cities.size();
+        return weatherDataList.size();
     }
 
     @Override
@@ -41,16 +40,20 @@ public class CityAdapter extends BaseAdapter {
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
+        WeatherData data = weatherDataList.get(i);
+        View myView;
         if(view == null){
-            view = LayoutInflater.from(context).inflate(R.layout.activity_history_list,null);
-        }
-        myView = view;
+            myView = LayoutInflater.from(context).inflate(R.layout.activity_history_list,null);
+        } else myView = view;
         TextView city = (TextView) myView.findViewById(R.id.city);
-        city.setText(cities.get(i).toUpperCase());
+        TextView time = (TextView) myView.findViewById(R.id.time);
+        TextView temp = (TextView) myView.findViewById(R.id.temp);
+        ImageView bg = (ImageView) myView.findViewById(R.id.bg);
 
-        WeatherData currCity = new WeatherData();
-        currCity.getData(cities.get(i), context, null, myView, false, true);
-        return view;
+        city.setText(data.city.toUpperCase());
+        time.setText(data.timeStr + " - " + data.weather);
+        temp.setText(data.tempC + "°");
+        return myView;
     }
 
     @SuppressLint("SetTextI18n")
